@@ -1,0 +1,14 @@
+/target
+.DS_Store
+*.db
+
+# Eclipse files
+.project
+.classpath
+.settings/
+/bin/
+.checkstyle
+.factorypath
+
+# Maven generated files
+target/

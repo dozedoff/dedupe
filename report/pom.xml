@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.github.dozedoff</groupId>
+	<artifactId>dedupe-report</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<description>Used to generate an aggregated report</description>
+	<packaging>pom</packaging>
+
+	<name>dedupe-report</name>
+	
+	<parent>
+		<groupId>com.github.dozedoff</groupId>
+		<artifactId>dedupe</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+	</properties>
+	
+	<build>
+		<plugins>
+				<plugin>
+			  <groupId>org.jacoco</groupId>
+			  <artifactId>jacoco-maven-plugin</artifactId>
+			  <version>0.7.9</version>
+			  		<configuration>
+							<excludes>
+								<exclude>**/component/*</exclude>
+								<exclude>**/module/*</exclude>
+								<exclude>**/*_Factory.*</exclude>
+							</excludes>
+						</configuration>
+			      <executions>
+					<execution>
+						<goals>
+							<goal>report-aggregate</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			</plugins>
+	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.github.dozedoff</groupId>
+			<artifactId>dedupe-core</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.dozedoff</groupId>
+			<artifactId>dedupe-cli</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+	</dependencies>
+</project>
