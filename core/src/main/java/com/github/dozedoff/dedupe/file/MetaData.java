@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import com.github.dozedoff.dedupe.db.table.FileMetaData;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
@@ -60,5 +61,18 @@ public class MetaData {
 	public byte[] contentHash(Path path) throws IOException {
 			HashCode hc = MoreFiles.asByteSource(path).hash(MURMUR_HASH);
 			return hc.asBytes();
+	}
+
+	/**
+	 * Convenience method to create {@link FileMetaData} instances from file paths.
+	 * 
+	 * @param file
+	 *            for which metadata should be created
+	 * @return metadata for the file
+	 * @throws IOException
+	 *             if there is an IO error
+	 */
+	public FileMetaData createMetaDataFromFile(Path file) throws IOException {
+		return new FileMetaData(file.toString(), size(file), lastModified(file), contentHash(file));
 	}
 }

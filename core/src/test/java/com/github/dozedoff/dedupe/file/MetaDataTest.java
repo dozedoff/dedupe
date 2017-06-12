@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.github.dozedoff.dedupe.db.table.FileMetaData;
 import com.google.common.hash.HashCode;
 import com.google.common.jimfs.Jimfs;
 
@@ -63,5 +64,13 @@ public class MetaDataTest {
 	@Test
 	public void testContentHash() throws Exception {
 		assertThat(cut.contentHash(testFile), is(HashCode.fromString(TEST_DATA_MURMUR3_X64_128_HASH).asBytes()));
+	}
+
+	@Test
+	public void testCreateMetaDataFromFile() throws Exception {
+		FileMetaData meta = cut.createMetaDataFromFile(testFile);
+
+		assertThat(meta, is(new FileMetaData(testFile.toString(), TEST_DATA_TEMPLATE.length, modTime.toMillis(),
+				HashCode.fromString(TEST_DATA_MURMUR3_X64_128_HASH).asBytes())));
 	}
 }
