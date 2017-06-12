@@ -36,6 +36,14 @@ final public class FileMetaData {
 	private byte[] hash;
 
 	/**
+	 * Creates a empty {@link FileMetaData} instance.
+	 */
+	public FileMetaData() {
+		this.path = "";
+		this.hash = new byte[0];
+	}
+
+	/**
 	 * Create a new file metadata entry
 	 * 
 	 * @param path
