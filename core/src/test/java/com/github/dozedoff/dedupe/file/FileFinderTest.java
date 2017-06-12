@@ -2,7 +2,7 @@
  * Copyright (c) 2017 Nicholas Wright
  * http://opensource.org/licenses/MIT
  */
-package com.github.dozedoff.dedupe.find;
+package com.github.dozedoff.dedupe.file;
 
 import static org.hamcrest.Matchers.hasItems;
 import static org.junit.Assert.assertThat;
