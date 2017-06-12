@@ -57,6 +57,8 @@ public class SizeGroup {
 				
 			}
 		});
+
+		LOGGER.info("Currently mapped {} files to {} unique sizes", sizeGroups.size(), sizeGroups.keySet().size());
 	}
 
 	/**
@@ -75,7 +77,6 @@ public class SizeGroup {
 				}
 			}
 		});
-
 		
 		return sameSize;
 	}

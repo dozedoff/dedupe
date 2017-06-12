@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.dozedoff.dedupe.db.table.FileMetaData;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
@@ -17,6 +20,8 @@ import com.google.common.collect.Multimaps;
 import com.google.common.hash.HashCode;
 
 public class HashGroup {
+	private static final Logger LOGGER = LoggerFactory.getLogger(HashGroup.class);
+
 	private final Multimap<String, FileMetaData> hashGroups;
 
 	/**
@@ -41,6 +46,8 @@ public class HashGroup {
 				sync.put(HashCode.fromBytes(t.getHash()).toString(), t);
 			}
 		});
+
+		LOGGER.info("Currently mapped {} files to {} unique hashes", hashGroups.size(), hashGroups.keySet().size());
 	}
 
 	/**
