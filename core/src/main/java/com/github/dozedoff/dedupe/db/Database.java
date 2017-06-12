@@ -37,7 +37,7 @@ public class Database {
 	 *             if there is an error creating the database
 	 */
 	public static Database inMemoryDatabase() throws SQLException {
-		return new Database("memory");
+		return new Database(":memory:");
 	}
 
 	/**
