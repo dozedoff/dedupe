@@ -25,6 +25,7 @@ public class HashGroupTest {
 	private FileMetaData metaA;
 	private FileMetaData metaB;
 	private FileMetaData metaC;
+	private FileMetaData metaD;
 
 	@Before
 	public void setUp() throws Exception {
@@ -36,8 +37,9 @@ public class HashGroupTest {
 		metaA = new FileMetaData("A", 0, 0, hashA.clone());
 		metaB = new FileMetaData("B", 0, 0, hashB.clone());
 		metaC = new FileMetaData("C", 0, 0, hashA.clone());
+		metaD = new FileMetaData();
 
-		cut.add(Arrays.asList(metaA, metaB, metaC).stream());
+		cut.add(Arrays.asList(metaA, metaB, metaC, metaD).stream());
 	}
 
 	@Test

@@ -43,11 +43,19 @@ public class HashGroup {
 		stream.parallel().forEach(new Consumer<FileMetaData>() {
 			@Override
 			public void accept(FileMetaData t) {
+				if (!isValidMetadata(t)) {
+					return;
+				}
+
 				sync.put(HashCode.fromBytes(t.getHash()).toString(), t);
 			}
 		});
 
 		LOGGER.info("Currently mapped {} files to {} unique hashes", hashGroups.size(), hashGroups.keySet().size());
+	}
+
+	private boolean isValidMetadata(FileMetaData metaData) {
+		return metaData.getHash().length > 0;
 	}
 
 	/**
