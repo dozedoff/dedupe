@@ -6,7 +6,9 @@ package com.github.dozedoff.dedupe.db;
 
 import java.sql.SQLException;
 
+import com.github.dozedoff.dedupe.db.table.FileMetaData;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
+import com.j256.ormlite.table.TableUtils;
 
 /**
  * The SQLite database the program uses.
@@ -48,6 +50,8 @@ public class Database {
 	 */
 	public Database(String databaseFile) throws SQLException {
 		connectionSource = new JdbcConnectionSource("jdbc:sqlite:" + databaseFile);
+
+		TableUtils.createTableIfNotExists(getConnectionSource(), FileMetaData.class);
 	}
 
 	/**
