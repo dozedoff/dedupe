@@ -28,7 +28,7 @@ public class FileMetaData {
 	@DatabaseField
 	private long modifiedTime;
 	@DatabaseField(index = true)
-	private long hash;
+	private byte[] hash;
 
 	/**
 	 * Create a new file metadata entry
@@ -42,11 +42,11 @@ public class FileMetaData {
 	 * @param hash
 	 *            of the file
 	 */
-	public FileMetaData(String path, long size, long modifiedTime, long hash) {
+	public FileMetaData(String path, long size, long modifiedTime, byte[] hash) {
 		this.path = path;
 		this.size = size;
 		this.modifiedTime = modifiedTime;
-		this.hash = hash;
+		this.hash = hash.clone();
 	}
 
 	/**
@@ -101,7 +101,7 @@ public class FileMetaData {
 	 * 
 	 * @return a hash representing the file
 	 */
-	public long getHash() {
-		return hash;
+	public byte[] getHash() {
+		return hash.clone();
 	}
 }
