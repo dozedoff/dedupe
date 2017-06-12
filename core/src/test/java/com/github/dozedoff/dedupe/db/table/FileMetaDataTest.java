@@ -17,6 +17,8 @@ import org.junit.Test;
 
 import com.google.common.jimfs.Jimfs;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 public class FileMetaDataTest {
 	private static final String PATH = "foo";
 	private static final byte[] HASH_TEMPLATE = new byte[] { 1, 2, 3, 4, 5 };
@@ -54,5 +56,15 @@ public class FileMetaDataTest {
 	@Test
 	public void testGetHash() throws Exception {
 		assertArrayEquals(cut.getHash(), hash);
+	}
+
+	@Test
+	public void testEquals() throws Exception {
+		assertThat(cut.equals(new FileMetaData(PATH, 0, 0, hash)), is(true));
+	}
+
+	@Test
+	public void testEqualsVerify() throws Exception {
+		EqualsVerifier.forClass(FileMetaData.class).allFieldsShouldBeUsedExcept("id").verify();
 	}
 }

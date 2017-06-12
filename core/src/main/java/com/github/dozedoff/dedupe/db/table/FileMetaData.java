@@ -7,7 +7,10 @@ package com.github.dozedoff.dedupe.db.table;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Objects;
 
+import com.google.errorprone.annotations.Immutable;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
@@ -18,7 +21,8 @@ import com.j256.ormlite.table.DatabaseTable;
  *
  */
 @DatabaseTable
-public class FileMetaData {
+@Immutable
+final public class FileMetaData {
 	@DatabaseField(generatedId = true)
 	private int id;
 	@DatabaseField(unique = true, index = true)
@@ -103,5 +107,34 @@ public class FileMetaData {
 	 */
 	public byte[] getHash() {
 		return hash.clone();
+	}
+
+	/**
+	 * Check if the objects are equal.
+	 * 
+	 * @param obj
+	 *            the object to compare to this instance
+	 * @return true if all fields except the id match
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof FileMetaData) {
+			FileMetaData other = (FileMetaData) obj;
+			return Objects.equals(this.path, other.path) && Objects.equals(this.size, other.size)
+					&& Objects.equals(this.modifiedTime, other.modifiedTime)
+					&& Objects.deepEquals(this.hash, other.hash);
+		}
+
+		return false;
+	}
+
+	/**
+	 * Hashcode of this instance of all fields except id.
+	 * 
+	 * @return the hashcode of this instance
+	 */
+	@Override
+	public int hashCode() {
+		return Objects.hash(path, size, modifiedTime, Arrays.hashCode(hash));
 	}
 }
