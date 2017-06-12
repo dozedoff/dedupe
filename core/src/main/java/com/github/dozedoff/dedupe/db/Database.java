@@ -17,6 +17,8 @@ import com.j256.ormlite.table.TableUtils;
  *
  */
 public class Database {
+	private static final String DEFAULT_DATABASE_PATH = "dedupe.db";
+
 	private final JdbcConnectionSource connectionSource;
 
 	/**
@@ -26,7 +28,7 @@ public class Database {
 	 *             if there is an error creating the database
 	 */
 	public Database() throws SQLException {
-		connectionSource = new JdbcConnectionSource("jdbc:sqlite:dedupe.db");
+		this(DEFAULT_DATABASE_PATH);
 	}
 
 	/**
