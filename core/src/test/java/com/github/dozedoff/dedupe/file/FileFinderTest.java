@@ -4,6 +4,8 @@
  */
 package com.github.dozedoff.dedupe.file;
 
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.junit.Assert.assertThat;
 
@@ -50,5 +52,12 @@ public class FileFinderTest {
 	public void testFindFiles() throws Exception {
 		Stream<Path> files = cut.findFiles(dirA);
 		assertThat(files.collect(Collectors.toList()), hasItems(fileA,fileB));
+	};
+
+	@Test
+	public void testNoDirectory() throws Exception {
+		Stream<Path> files = cut.findFiles(dirA);
+		
+		assertThat(files.collect(Collectors.toList()), not(hasItem(dirA)));
 	};
 }

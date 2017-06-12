@@ -7,6 +7,7 @@ package com.github.dozedoff.dedupe.file;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -25,6 +26,11 @@ public class FileFinder {
 	 * @throws IOException if there was an error accessing the file system 
 	 */
 	public Stream<Path> findFiles(Path directory) throws IOException {
-		return Files.walk(directory);
+		return Files.walk(directory).filter(new Predicate<Path>() {
+			@Override
+			public boolean test(Path t) {
+				return Files.isRegularFile(t);
+			}
+		});
 	}
 }
