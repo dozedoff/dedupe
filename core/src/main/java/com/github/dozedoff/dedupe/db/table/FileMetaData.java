@@ -12,6 +12,7 @@ import java.util.Objects;
 
 import com.google.common.base.MoreObjects;
 import com.google.errorprone.annotations.Immutable;
+import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
@@ -32,7 +33,7 @@ final public class FileMetaData {
 	private long size;
 	@DatabaseField
 	private long modifiedTime;
-	@DatabaseField(index = true)
+	@DatabaseField(index = true, dataType = DataType.BYTE_ARRAY)
 	private byte[] hash;
 
 	/**
