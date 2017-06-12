@@ -21,7 +21,10 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class FileMetaDataTest {
 	private static final String PATH = "foo";
+	private static final long SIZE = 42;
+	private static final long MOD_TIME = 1000;
 	private static final byte[] HASH_TEMPLATE = new byte[] { 1, 2, 3, 4, 5 };
+	private static final String TO_STRING = "FileMetaData{path=foo, size=42, modt=1000, hash=[1, 2, 3, 4, 5]}";
 
 	private FileSystem fs;
 	private Path path;
@@ -35,7 +38,7 @@ public class FileMetaDataTest {
 		path = fs.getPath(PATH);
 		hash = HASH_TEMPLATE.clone();
 
-		cut = new FileMetaData(PATH, 0, 0, hash);
+		cut = new FileMetaData(PATH, SIZE, MOD_TIME, hash);
 	}
 
 	@Test
@@ -60,11 +63,16 @@ public class FileMetaDataTest {
 
 	@Test
 	public void testEquals() throws Exception {
-		assertThat(cut.equals(new FileMetaData(PATH, 0, 0, hash)), is(true));
+		assertThat(cut.equals(new FileMetaData(PATH, SIZE, MOD_TIME, hash)), is(true));
 	}
 
 	@Test
 	public void testEqualsVerify() throws Exception {
 		EqualsVerifier.forClass(FileMetaData.class).allFieldsShouldBeUsedExcept("id").verify();
+	}
+
+	@Test
+	public void testToString() throws Exception {
+		assertThat(cut.toString(), is(TO_STRING));
 	}
 }

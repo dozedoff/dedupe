@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Objects;
 
+import com.google.common.base.MoreObjects;
 import com.google.errorprone.annotations.Immutable;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
@@ -136,5 +137,16 @@ final public class FileMetaData {
 	@Override
 	public int hashCode() {
 		return Objects.hash(path, size, modifiedTime, Arrays.hashCode(hash));
+	}
+
+	/**
+	 * String representation of this object.
+	 * 
+	 * @return the fields of this instance encoded as a {@link String}
+	 */
+	@Override
+	public String toString() {
+		return MoreObjects.toStringHelper(FileMetaData.class).add("path", path).add("size", size)
+				.add("modt", modifiedTime).add("hash", hash).toString();
 	}
 }
