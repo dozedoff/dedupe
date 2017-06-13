@@ -20,6 +20,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<ormlite-version>4.48</ormlite-version>
 	</properties>
 	
 	<build>
@@ -35,12 +36,12 @@
 		<dependency>
 			<groupId>com.j256.ormlite</groupId>
 			<artifactId>ormlite-core</artifactId>
-			<version>4.47</version>
+			<version>${ormlite-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.j256.ormlite</groupId>
 			<artifactId>ormlite-jdbc</artifactId>
-			<version>4.47</version>
+			<version>${ormlite-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.xerial</groupId>
