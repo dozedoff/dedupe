@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Objects;
 
+import com.github.dozedoff.dedupe.db.dao.FileMetaDataDao;
 import com.google.common.base.MoreObjects;
 import com.google.errorprone.annotations.Immutable;
 import com.j256.ormlite.field.DataType;
@@ -22,12 +23,14 @@ import com.j256.ormlite.table.DatabaseTable;
  * @author Nicholas Wright
  *
  */
-@DatabaseTable
+@DatabaseTable(daoClass = FileMetaDataDao.class)
 @Immutable
 final public class FileMetaData {
+	public static final String PATH_COLUMN_NAME = "path";
+
 	@DatabaseField(generatedId = true)
 	private int id;
-	@DatabaseField(unique = true, index = true)
+	@DatabaseField(unique = true, index = true, columnName = PATH_COLUMN_NAME)
 	private String path;
 	@DatabaseField(index = true)
 	private long size;
@@ -155,7 +158,7 @@ final public class FileMetaData {
 	 */
 	@Override
 	public String toString() {
-		return MoreObjects.toStringHelper(FileMetaData.class).add("path", path).add("size", size)
+		return MoreObjects.toStringHelper(FileMetaData.class).add(PATH_COLUMN_NAME, path).add("size", size)
 				.add("modt", modifiedTime).add("hash", hash).toString();
 	}
 }
