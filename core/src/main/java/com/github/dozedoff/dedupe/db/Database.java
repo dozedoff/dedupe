@@ -8,6 +8,7 @@ import java.sql.SQLException;
 
 import com.github.dozedoff.dedupe.db.table.FileMetaData;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
+import com.j256.ormlite.support.DatabaseConnection;
 import com.j256.ormlite.table.TableUtils;
 
 /**
@@ -52,6 +53,14 @@ public class Database {
 	 */
 	public Database(String databaseFile) throws SQLException {
 		connectionSource = new JdbcConnectionSource("jdbc:sqlite:" + databaseFile);
+
+		DatabaseConnection dbConn = connectionSource.getReadWriteConnection();
+		dbConn.executeStatement("PRAGMA page_size=4096;", DatabaseConnection.DEFAULT_RESULT_FLAGS);
+		dbConn.executeStatement("PRAGMA cache_size=5120;", DatabaseConnection.DEFAULT_RESULT_FLAGS);
+		dbConn.executeStatement("PRAGMA locking_mode=EXCLUSIVE;", DatabaseConnection.DEFAULT_RESULT_FLAGS);
+		dbConn.executeStatement("PRAGMA synchronous=NORMAL;", DatabaseConnection.DEFAULT_RESULT_FLAGS);
+		dbConn.executeStatement("PRAGMA temp_store=MEMORY;", DatabaseConnection.DEFAULT_RESULT_FLAGS);
+		connectionSource.releaseConnection(dbConn);
 
 		TableUtils.createTableIfNotExists(getConnectionSource(), FileMetaData.class);
 	}
