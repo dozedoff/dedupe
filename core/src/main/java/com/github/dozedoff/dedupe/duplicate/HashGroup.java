@@ -5,8 +5,10 @@
 package com.github.dozedoff.dedupe.duplicate;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -76,5 +78,26 @@ public class HashGroup {
 		});
 		
 		return sameHash;
+	}
+
+	/**
+	 * Returns a {@link Multimap} that only contains keys that have more than one value.
+	 * 
+	 * @return a {@link Multimap} with duplicate file candidates
+	 */
+	public Multimap<String, FileMetaData> nonUniqueMap() {
+		Iterator<Entry<String, Collection<FileMetaData>>> iter = hashGroups.asMap().entrySet().iterator();
+
+		while (iter.hasNext()) {
+			if (!hasMoreThanOneFile(iter.next())) {
+				iter.remove();
+			}
+		}
+
+		return hashGroups;
+	}
+
+	private boolean hasMoreThanOneFile(Entry<String, Collection<FileMetaData>> entry) {
+		return entry.getValue().size() > 1;
 	}
 }

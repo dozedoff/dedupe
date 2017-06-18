@@ -7,6 +7,7 @@ package com.github.dozedoff.dedupe.duplicate;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Awaitility.to;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.junit.Assert.assertThat;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +28,8 @@ public class HashGroupTest {
 	private FileMetaData metaC;
 	private FileMetaData metaD;
 
+	private FileMetaData[] expected;
+
 	@Before
 	public void setUp() throws Exception {
 		cut = new HashGroup();
@@ -39,13 +42,18 @@ public class HashGroupTest {
 		metaC = new FileMetaData("C", 0, 0, hashA.clone());
 		metaD = new FileMetaData();
 
+		expected = new FileMetaData[] { metaA, metaC };
+
 		cut.add(Arrays.asList(metaA, metaB, metaC, metaD).stream());
 	}
 
 	@Test
 	public void testSameHash() throws Exception {
-		FileMetaData[] expected = { metaA, metaC };
-
 		await().atMost(TIMEOUT).untilCall(to(cut).sameHash(), containsInAnyOrder(expected));
+	}
+
+	@Test
+	public void testNonUniqueMap() throws Exception {
+		assertThat(cut.nonUniqueMap().values(), containsInAnyOrder(expected));
 	}
 }
