@@ -9,9 +9,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -26,6 +28,9 @@ import com.github.dozedoff.dedupe.duplicate.HashGroup;
 import com.github.dozedoff.dedupe.duplicate.SizeGroup;
 import com.github.dozedoff.dedupe.duplicate.VerifyMetaData;
 import com.github.dozedoff.dedupe.file.FileFinder;
+import com.github.dozedoff.dedupe.file.FileLinker;
+import com.github.dozedoff.dedupe.file.HardLinker;
+import com.github.dozedoff.dedupe.file.LoggingLinker;
 import com.github.dozedoff.dedupe.file.MetaData;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Multimap;
@@ -33,6 +38,7 @@ import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.dao.LruObjectCache;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.Namespace;
 
@@ -63,11 +69,17 @@ public class DedupeCli {
 				.description("Find duplicate files and replace them with links");
 		parser.addArgument("dir").nargs("*").help("Directories to walk for files");
 		parser.addArgument("-d", "--db").help("Path to the database");
+		parser.addArgument("-n", "--dry-run").help("Generate and update metadata, but do not create hard links")
+				.action(Arguments.storeTrue());
 		
 		return parser.parseArgsOrFail(args);
 	}
 
 	private void setUpDatabase() throws SQLException {
+		if (ns.getBoolean("dry_run")) {
+			LOGGER.info("=== DRY RUN ===");
+		}
+
 		LOGGER.info("Opening database...");
 
 		if (ns.getString("db") == null) {
@@ -194,5 +206,38 @@ public class DedupeCli {
 		List<Collection<FileMetaData>> duplicateGroups = compareFile.groupIdenticalFiles(hashBasedCandidates);
 
 		LOGGER.info("After comparing and grouping, there are {} groups", duplicateGroups.size());
+
+		FileLinker fileLinker = null;
+
+		if (ns.getBoolean("dry_run")) {
+			LOGGER.info("Using logging linker...");
+			fileLinker = new LoggingLinker();
+		} else {
+			LOGGER.info("Using hard linker...");
+			fileLinker = new HardLinker();
+		}
+
+		long skipped = 0;
+
+		for (Collection<FileMetaData> duplicateGroup : duplicateGroups) {
+			if (duplicateGroup.size() == 1) {
+				skipped++;
+				continue;
+			}
+
+			Iterator<FileMetaData> iter = duplicateGroup.iterator();
+
+			Path source = iter.next().getPath();
+			iter.remove();
+
+			fileLinker.link(source,
+					duplicateGroup.parallelStream().map(DedupeCli::pathFromMeta).collect(Collectors.toList()));
+		}
+
+		LOGGER.info("Skipped {} groups because the only contained one file", skipped);
+	}
+
+	private static Path pathFromMeta(FileMetaData meta) {
+		return meta.getPath();
 	}
 }
