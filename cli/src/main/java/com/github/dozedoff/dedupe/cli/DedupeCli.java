@@ -220,7 +220,7 @@ public class DedupeCli {
 		long skipped = 0;
 
 		for (Collection<FileMetaData> duplicateGroup : duplicateGroups) {
-			if (duplicateGroup.size() == 1) {
+			if (duplicateGroup.size() < 2) {
 				skipped++;
 				continue;
 			}
@@ -234,7 +234,7 @@ public class DedupeCli {
 					duplicateGroup.parallelStream().map(DedupeCli::pathFromMeta).collect(Collectors.toList()));
 		}
 
-		LOGGER.info("Skipped {} groups because the only contained one file", skipped);
+		LOGGER.info("Skipped {} groups because they contained less than two files", skipped);
 	}
 
 	private static Path pathFromMeta(FileMetaData meta) {
