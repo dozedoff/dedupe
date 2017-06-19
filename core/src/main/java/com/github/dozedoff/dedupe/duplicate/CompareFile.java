@@ -12,6 +12,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -109,16 +110,17 @@ public class CompareFile {
 	public List<Collection<FileMetaData>> groupIdenticalFiles(
 			Multimap<String, FileMetaData> identaicalCandidates) {
 
-		List<Collection<FileMetaData>> identicalFileGroups = new LinkedList<Collection<FileMetaData>>();
+		List<Collection<FileMetaData>> identicalFileGroups = Collections
+				.synchronizedList(new LinkedList<Collection<FileMetaData>>());
 		List<Collection<FileMetaData>> candidatesToGroup = new LinkedList<Collection<FileMetaData>>();
 		
 		Multimaps.asMap(identaicalCandidates).forEach((key, valueCollection) -> {
 			candidatesToGroup.add(valueCollection);
 		});
 
-		for (Collection<FileMetaData> collection : candidatesToGroup) {
-			identicalFileGroups.addAll(groupFiles(collection));
-		}
+		candidatesToGroup.parallelStream().forEach(candidate -> {
+			identicalFileGroups.addAll(groupFiles(candidate));
+		});
 		
 		return identicalFileGroups;
 	}
