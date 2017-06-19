@@ -4,7 +4,11 @@
  */
 package com.github.dozedoff.dedupe.duplicate;
 
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 
 import java.nio.file.FileSystem;
@@ -12,15 +16,21 @@ import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.List;
 import java.util.Random;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import com.github.dozedoff.dedupe.db.table.FileMetaData;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import com.google.common.jimfs.Jimfs;
 
 public class CompareFileTest {
 	private static final int TEST_DATA_SIZE = 10000;
+	private static final int TEST_TIMEOUT = 1000;
 
 	private Random rand;
 
@@ -33,6 +43,14 @@ public class CompareFileTest {
 
 	private byte[] dataA;
 	private byte[] dataB;
+
+	private Multimap<String, FileMetaData> identicalCandiadates;
+	private CompareFile cut;
+
+	private FileMetaData metaA;
+	private FileMetaData metaB;
+	private FileMetaData metaC;
+	private FileMetaData metaZero;
 
 	@Before
 	public void setUp() throws Exception {
@@ -51,6 +69,23 @@ public class CompareFileTest {
 		Files.write(pathB, dataB);
 		Files.write(pathC, dataA);
 		Files.write(pathZero, new byte[0]);
+
+		identicalCandiadates = MultimapBuilder.hashKeys().hashSetValues().build();
+
+		String group1Hash = "1";
+		identicalCandiadates.put(group1Hash, new FileMetaData(pathA.toString(), 0, 0, new byte[0]));
+		identicalCandiadates.put(group1Hash, new FileMetaData(pathB.toString(), 0, 0, new byte[0]));
+		identicalCandiadates.put(group1Hash, new FileMetaData(pathC.toString(), 0, 0, new byte[0]));
+
+		metaA = new FileMetaData(pathA.toString(), 0, 0, new byte[0]);
+		metaB = new FileMetaData(pathB.toString(), 0, 0, new byte[0]);
+		metaC = new FileMetaData(pathC.toString(), 0, 0, new byte[0]);
+
+		String group2Hash = "2";
+		metaZero = new FileMetaData(pathZero.toString(), 0, 0, new byte[0]);
+		identicalCandiadates.put(group2Hash, metaZero);
+
+		cut = new CompareFile(fs);
 	}
 
 	private byte[] randomData(int length) {
@@ -113,5 +148,18 @@ public class CompareFileTest {
 		Files.createDirectory(dir);
 
 		CompareFile.equal(dir, pathA);
+	}
+
+	@Test
+	public void testGroupIdenticalFiles() throws Exception {
+		List<Collection<FileMetaData>> grouped = cut.groupIdenticalFiles(identicalCandiadates);
+
+		assertThat(grouped, hasItem(allOf(hasItems(metaA, metaC), hasSize(2))));
+		assertThat(grouped, hasItem(allOf(hasItems(metaB), hasSize(1))));
+	}
+
+	@Test(timeout = TEST_TIMEOUT)
+	public void testGroupIdenticalFilesSingleCandidate() throws Exception {
+		assertThat(cut.groupIdenticalFiles(identicalCandiadates), hasItem(allOf(hasItems(metaZero), hasSize(1))));
 	}
 }
