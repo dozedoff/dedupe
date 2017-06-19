@@ -46,8 +46,17 @@ public class HardLinker implements FileLinker {
 					continue;
 				}
 
-				Files.deleteIfExists(taget);
+				Path filename = taget.getFileName();
+
+				if (filename == null) {
+					LOGGER.warn("Filename for {} was null, aborting...", taget);
+					continue;
+				}
+
+				Path backup = taget.resolveSibling(filename.toString() + ".tmp");
+				Files.move(source, backup);
 				Files.createLink(taget, source);
+				Files.deleteIfExists(backup);
 			} catch (IOException e) {
 				LOGGER.warn("Failed to create hard link from {} to {}: {}", source, taget, e.toString());
 			}
