@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -20,11 +21,13 @@ import com.github.dozedoff.dedupe.db.BatchWriter;
 import com.github.dozedoff.dedupe.db.Database;
 import com.github.dozedoff.dedupe.db.dao.FileMetaDataDao;
 import com.github.dozedoff.dedupe.db.table.FileMetaData;
+import com.github.dozedoff.dedupe.duplicate.CompareFile;
 import com.github.dozedoff.dedupe.duplicate.HashGroup;
 import com.github.dozedoff.dedupe.duplicate.SizeGroup;
 import com.github.dozedoff.dedupe.file.FileFinder;
 import com.github.dozedoff.dedupe.file.MetaData;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.Multimap;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.dao.LruObjectCache;
 
@@ -168,9 +171,16 @@ public class DedupeCli {
 
 		batchWriter.shutdown();
 
-		List<FileMetaData> hashBasedCandidates = hashGroup.sameHash();
+		Multimap<String, FileMetaData> hashBasedCandidates = hashGroup.nonUniqueMap();
 
-		LOGGER.info("Found {} files with matching hashes", hashBasedCandidates.size());
+		LOGGER.info("Found {} files with matching hashes in {} groups", hashBasedCandidates.size(),
+				hashBasedCandidates.keySet().size());
 		LOGGER.info("Comparing files by contents...");
+
+		CompareFile compareFile = new CompareFile();
+
+		List<Collection<FileMetaData>> duplicateGroups = compareFile.groupIdenticalFiles(hashBasedCandidates);
+
+		LOGGER.info("After comparing and grouping, there are {} groups", duplicateGroups.size());
 	}
 }
