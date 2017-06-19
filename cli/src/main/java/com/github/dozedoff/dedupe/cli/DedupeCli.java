@@ -24,6 +24,7 @@ import com.github.dozedoff.dedupe.db.table.FileMetaData;
 import com.github.dozedoff.dedupe.duplicate.CompareFile;
 import com.github.dozedoff.dedupe.duplicate.HashGroup;
 import com.github.dozedoff.dedupe.duplicate.SizeGroup;
+import com.github.dozedoff.dedupe.duplicate.VerifyMetaData;
 import com.github.dozedoff.dedupe.file.FileFinder;
 import com.github.dozedoff.dedupe.file.MetaData;
 import com.google.common.base.Stopwatch;
@@ -130,8 +131,11 @@ public class DedupeCli {
 		AtomicInteger existingMeta = new AtomicInteger();
 		AtomicInteger newMeta = new AtomicInteger();
 		AtomicInteger totalFiles = new AtomicInteger();
+		AtomicInteger updatedMeta = new AtomicInteger();
 
 		BatchWriter<FileMetaDataDao, FileMetaData> batchWriter = new BatchWriter<FileMetaDataDao, FileMetaData>(dao);
+
+		VerifyMetaData verify = new VerifyMetaData(metaData);
 
 		hashGroup.add(sizeBasedCandidates.parallelStream().map(new Function<Path, FileMetaData>() {
 			@Override
@@ -144,6 +148,14 @@ public class DedupeCli {
 					if (dao.hasMetaData(t)) {
 						existingMeta.getAndIncrement();
 						meta = dao.getMetaDataForPath(t);
+
+						if (verify.hasChanged(meta)) {
+							LOGGER.info("File {} has changed, updating metadata", meta.getPath());
+							updatedMeta.getAndIncrement();
+
+							dao.delete(meta);
+							batchWriter.add(metaData.createMetaDataFromFile(t));
+						}
 					} else {
 						newMeta.getAndIncrement();
 						meta = metaData.createMetaDataFromFile(t);
