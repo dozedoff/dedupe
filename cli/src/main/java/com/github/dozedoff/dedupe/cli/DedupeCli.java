@@ -188,8 +188,8 @@ public class DedupeCli {
 		}));
 
 		LOGGER.info(
-				"From a total of {} files, {} files were already known, {} new metadata entries were added and {} errors were encountered",
-				totalFiles, existingMeta, newMeta,
+				"From a total of {} files, {} files were already known, of which {} were updated, {} new metadata entries were added and {} errors were encountered",
+				totalFiles, existingMeta, updatedMeta, newMeta, 
 				totalFiles.get() - newMeta.get() - existingMeta.get());
 		LOGGER.info("Finished generating metadata for {} files in {}", newMeta, metadataSW);
 
