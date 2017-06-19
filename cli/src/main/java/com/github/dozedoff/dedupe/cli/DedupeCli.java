@@ -231,7 +231,7 @@ public class DedupeCli {
 			iter.remove();
 
 			fileLinker.link(source,
-					duplicateGroup.parallelStream().map(DedupeCli::pathFromMeta).collect(Collectors.toList()));
+					duplicateGroup.parallelStream().map(DedupeCli::pathFromMeta).sorted().collect(Collectors.toList()));
 		}
 
 		LOGGER.info("Skipped {} groups because they contained less than two files", skipped);
