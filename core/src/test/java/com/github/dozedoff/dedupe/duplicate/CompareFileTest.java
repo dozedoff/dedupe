@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.github.dozedoff.dedupe.db.table.FileMetaData;
+import com.github.dozedoff.dedupe.util.TestDataUtil;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.jimfs.Jimfs;
@@ -55,7 +56,6 @@ public class CompareFileTest {
 	@Before
 	public void setUp() throws Exception {
 		fs = Jimfs.newFileSystem();
-		rand = new Random();
 
 		dataA = randomData(TEST_DATA_SIZE);
 		dataB = randomData(TEST_DATA_SIZE * 2);
@@ -89,13 +89,7 @@ public class CompareFileTest {
 	}
 
 	private byte[] randomData(int length) {
-		byte[] data = new byte[length];
-
-		for (int i = 0; i < length; i++) {
-			data[i] = (byte) (rand.nextInt(Byte.MAX_VALUE + 1));
-		}
-
-		return data;
+		return TestDataUtil.randomData(length);
 	}
 
 	@Test
