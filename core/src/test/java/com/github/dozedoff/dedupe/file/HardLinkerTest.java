@@ -67,4 +67,13 @@ public class HardLinkerTest {
 
 		assertThat(CompareFile.equal(fileA, fileC), is(false));
 	}
+
+	@Test
+	public void testLinkBackupAlreadyExists() throws Exception {
+		Files.createFile(fs.getPath("B.tmp"));
+
+		cut.link(fileA, fileB);
+
+		assertThat(CompareFile.equal(fileA, fileB), is(false));
+	}
 }
