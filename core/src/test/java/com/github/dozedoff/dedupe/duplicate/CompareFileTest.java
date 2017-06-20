@@ -4,11 +4,9 @@
  */
 package com.github.dozedoff.dedupe.duplicate;
 
-import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertThat;
 
 import java.nio.file.FileSystem;
@@ -145,15 +143,14 @@ public class CompareFileTest {
 	}
 
 	@Test
-	public void testGroupIdenticalFiles() throws Exception {
+	public void testGroupIdenticalFilesFirstGroup() throws Exception {
 		List<Collection<FileMetaData>> grouped = cut.groupIdenticalFiles(identicalCandiadates);
 
-		assertThat(grouped, hasItem(allOf(hasItems(metaA, metaC), hasSize(2))));
-		assertThat(grouped, hasItem(allOf(hasItems(metaB), hasSize(1))));
+		assertThat(grouped, hasItem(containsInAnyOrder(metaA, metaC)));
 	}
 
 	@Test(timeout = TEST_TIMEOUT)
 	public void testGroupIdenticalFilesSingleCandidate() throws Exception {
-		assertThat(cut.groupIdenticalFiles(identicalCandiadates), hasItem(allOf(hasItems(metaZero), hasSize(1))));
+		assertThat(cut.groupIdenticalFiles(identicalCandiadates), hasItem(containsInAnyOrder(metaZero)));
 	}
 }
