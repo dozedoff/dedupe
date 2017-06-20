@@ -39,26 +39,26 @@ public class HardLinker implements FileLinker {
 	 */
 	@Override
 	public void link(Path source, Collection<Path> targets) {
-		for (Path taget : targets) {
+		for (Path target : targets) {
 			try {
-				if (!Files.getFileStore(source).equals(Files.getFileStore(taget))) {
-					LOGGER.warn("{} and {} are not on the same filesystem, skipping...", source, taget);
+				if (!Files.getFileStore(source).equals(Files.getFileStore(target))) {
+					LOGGER.warn("{} and {} are not on the same filesystem, skipping...", source, target);
 					continue;
 				}
 
-				Path filename = taget.getFileName();
+				Path filename = target.getFileName();
 
 				if (filename == null) {
-					LOGGER.warn("Filename for {} was null, aborting...", taget);
+					LOGGER.warn("Filename for {} was null, aborting...", target);
 					continue;
 				}
 
-				Path backup = taget.resolveSibling(filename.toString() + ".tmp");
-				Files.move(taget, backup);
-				Files.createLink(taget, source);
+				Path backup = target.resolveSibling(filename.toString() + ".tmp");
+				Files.move(target, backup);
+				Files.createLink(target, source);
 				Files.deleteIfExists(backup);
 			} catch (IOException e) {
-				LOGGER.warn("Failed to create hard link from {} to {}: {}", source, taget, e.toString());
+				LOGGER.warn("Failed to create hard link from {} to {}: {}", source, target, e.toString());
 			}
 		}
 	}
