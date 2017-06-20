@@ -4,7 +4,9 @@
  */
 package com.github.dozedoff.dedupe.file;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.junit.Assert.assertThat;
@@ -59,5 +61,21 @@ public class FileFinderTest {
 		Stream<Path> files = cut.findFiles(dirA);
 		
 		assertThat(files.collect(Collectors.toList()), not(hasItem(dirA)));
+	};
+
+	@Test
+	public void testIgnoreFiles() throws Exception {
+		cut = new FileFinder(".*A$");
+
+		Stream<Path> files = cut.findFiles(dirA);
+		assertThat(files.collect(Collectors.toList()), not(hasItems(fileA)));
+	};
+
+	@Test
+	public void testIgnoreDir() throws Exception {
+		cut = new FileFinder("^.*dir.*$");
+
+		Stream<Path> files = cut.findFiles(dirA);
+		assertThat(files.collect(Collectors.toList()), is(empty()));
 	};
 }
