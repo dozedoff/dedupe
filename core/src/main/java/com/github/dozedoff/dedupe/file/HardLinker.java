@@ -54,7 +54,7 @@ public class HardLinker implements FileLinker {
 				}
 
 				Path backup = taget.resolveSibling(filename.toString() + ".tmp");
-				Files.move(source, backup);
+				Files.move(taget, backup);
 				Files.createLink(taget, source);
 				Files.deleteIfExists(backup);
 			} catch (IOException e) {
