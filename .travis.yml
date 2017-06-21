@@ -1,0 +1,26 @@
+sudo: false
+dist: trusty
+language: java
+
+jobs:
+  include:
+    - script: mvn test
+      after_success:
+        - mvn jacoco:report-aggregate coveralls:report
+      jdk: oraclejdk8
+    - script: mvn test
+      after_success:
+        - mvn jacoco:report-aggregate coveralls:report
+      jdk: openjdk8 
+    - stage: GitHub Release
+      jdk: oraclejdk8
+      script: mvn package -Dmaven.test.skip=true
+      deploy:
+        provider: releases
+        api_key: $GITHUB_OAUTH_TOKEN
+        skip_cleanup: true
+        file_glob: true
+        file:
+          - cli/target/similarImage*.jar
+        on:
+          tags: true
