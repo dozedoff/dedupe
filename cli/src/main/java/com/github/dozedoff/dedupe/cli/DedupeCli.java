@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -34,6 +35,7 @@ import com.github.dozedoff.dedupe.file.LoggingLinker;
 import com.github.dozedoff.dedupe.file.MetaData;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.dao.LruObjectCache;
 
@@ -70,6 +72,9 @@ public class DedupeCli {
 		parser.addArgument("dir").nargs("*").help("Directories to walk for files");
 		parser.addArgument("-d", "--db").help("Path to the database");
 		parser.addArgument("-n", "--dry-run").help("Generate and update metadata, but do not create hard links")
+				.action(Arguments.storeTrue());
+		parser.addArgument("-p", "--paranoid")
+				.help("Compare files with hash matches byte by byte, to be sure they match")
 				.action(Arguments.storeTrue());
 		
 		return parser.parseArgsOrFail(args);
@@ -202,8 +207,14 @@ public class DedupeCli {
 		LOGGER.info("Comparing files by contents...");
 
 		CompareFile compareFile = new CompareFile();
-
-		List<Collection<FileMetaData>> duplicateGroups = compareFile.groupIdenticalFiles(hashBasedCandidates);
+		List<Collection<FileMetaData>> duplicateGroups;
+		if (ns.getBoolean("paranoid")) {
+			duplicateGroups = compareFile.groupIdenticalFiles(hashBasedCandidates);
+		} else {
+			duplicateGroups  = new LinkedList<Collection<FileMetaData>>();
+			Multimaps.asMap(hashBasedCandidates)
+					.forEach((key, valueCollection) -> duplicateGroups.add(valueCollection));
+		}
 
 		LOGGER.info("After comparing and grouping, there are {} groups", duplicateGroups.size());
 
