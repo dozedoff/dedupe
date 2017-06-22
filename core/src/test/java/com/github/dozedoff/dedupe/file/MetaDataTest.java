@@ -25,7 +25,7 @@ import com.google.common.jimfs.Jimfs;
 public class MetaDataTest {
 	private static final byte[] TEST_DATA_TEMPLATE = "The quick brown fox jumps over the lazy dog"
 			.getBytes(StandardCharsets.US_ASCII);
-	private static final String TEST_DATA_MURMUR3_X64_128_HASH = "6c1b07bc7bbc4be347939ac4a93c437a";
+	private static final String TEST_DATA_SHA512_HASH = "07e547d9586f6a73f73fbac0435ed76951218fb7d0c8d788a309d785436bbb642e93a252a954f23912547d1e8a3b5ed6e1bfd7097821233fa0538f3db854fee6";
 
 	private MetaData cut;
 	private byte[] data;
@@ -63,7 +63,7 @@ public class MetaDataTest {
 
 	@Test
 	public void testContentHash() throws Exception {
-		assertThat(cut.contentHash(testFile), is(HashCode.fromString(TEST_DATA_MURMUR3_X64_128_HASH).asBytes()));
+		assertThat(cut.contentHash(testFile), is(HashCode.fromString(TEST_DATA_SHA512_HASH).asBytes()));
 	}
 
 	@Test
@@ -71,6 +71,6 @@ public class MetaDataTest {
 		FileMetaData meta = cut.createMetaDataFromFile(testFile);
 
 		assertThat(meta, is(new FileMetaData(testFile.toString(), TEST_DATA_TEMPLATE.length, modTime.toMillis(),
-				HashCode.fromString(TEST_DATA_MURMUR3_X64_128_HASH).asBytes())));
+				HashCode.fromString(TEST_DATA_SHA512_HASH).asBytes())));
 	}
 }

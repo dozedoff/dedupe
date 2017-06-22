@@ -21,7 +21,7 @@ import com.google.common.io.MoreFiles;
  *
  */
 public class MetaData {
-	private static final HashFunction MURMUR_HASH = Hashing.murmur3_128();
+	private static final HashFunction SHA512 = Hashing.sha512();
 
 	/**
 	 * Get the file size.
@@ -59,7 +59,7 @@ public class MetaData {
 	 *             if there is an IO error
 	 */
 	public byte[] contentHash(Path path) throws IOException {
-			HashCode hc = MoreFiles.asByteSource(path).hash(MURMUR_HASH);
+		HashCode hc = MoreFiles.asByteSource(path).hash(SHA512);
 			return hc.asBytes();
 	}
 
