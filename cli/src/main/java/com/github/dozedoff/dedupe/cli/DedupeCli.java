@@ -173,8 +173,7 @@ public class DedupeCli {
 							LOGGER.info("File {} has changed, updating metadata", meta.getPath());
 							updatedMeta.getAndIncrement();
 
-							dao.delete(meta);
-							batchWriter.add(metaData.createMetaDataFromFile(t));
+							batchWriter.replace(meta, metaData.createMetaDataFromFile(t));
 						}
 					} else {
 						newMeta.getAndIncrement();
