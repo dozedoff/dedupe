@@ -70,7 +70,7 @@ public class DedupeCli {
 	private Namespace parseArgs(String[] args) {
 		ArgumentParser parser = ArgumentParsers.newArgumentParser("Dedupe CLI").defaultHelp(true)
 				.description("Find duplicate files and replace them with links");
-		parser.addArgument("dir").nargs("*").help("Directories to walk for files");
+		parser.addArgument("dir").nargs("+").help("Directories to walk for files");
 		parser.addArgument("-d", "--db").help("Path to the database");
 		parser.addArgument("-n", "--dry-run").help("Generate and update metadata, but do not create hard links")
 				.action(Arguments.storeTrue());
