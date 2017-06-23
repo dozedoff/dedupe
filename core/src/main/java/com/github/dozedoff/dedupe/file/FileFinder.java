@@ -15,6 +15,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Predicates;
 
 /**
@@ -24,6 +27,8 @@ import com.google.common.base.Predicates;
  *
  */
 public class FileFinder {
+	private static final Logger LOGGER = LoggerFactory.getLogger(FileFinder.class);
+
 	private final List<Pattern> excludes;
 
 	/**
@@ -51,6 +56,8 @@ public class FileFinder {
 	 */
 	public FileFinder(List<String> exclude) {
 		this.excludes = exclude.stream().map(Pattern::compile).collect(Collectors.toList());
+		LOGGER.info("Compiled {} exclusion patterns", this.excludes.size());
+		this.excludes.forEach(pattern -> LOGGER.info("{}", pattern.toString()));
 	}
 
 	/**

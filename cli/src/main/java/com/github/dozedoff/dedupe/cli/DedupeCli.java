@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -76,6 +77,8 @@ public class DedupeCli {
 		parser.addArgument("-p", "--paranoid")
 				.help("Compare files with hash matches byte by byte, to be sure they match")
 				.action(Arguments.storeTrue());
+		parser.addArgument("-i", "--ignore").nargs("*").help("Ignore paths that match the given java regex pattern")
+				.setDefault(Collections.emptyList());
 		
 		return parser.parseArgsOrFail(args);
 	}
@@ -109,7 +112,7 @@ public class DedupeCli {
 	}
 
 	private List<Path> findFiles() {
-		FileFinder ff = new FileFinder();
+		FileFinder ff = new FileFinder(ns.getList("ignore"));
 
 		MetaData metaData = new MetaData();
 		SizeGroup sizeGroup = new SizeGroup(metaData);
