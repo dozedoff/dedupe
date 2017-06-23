@@ -18,6 +18,7 @@ import org.junit.Test;
 import com.google.common.jimfs.Jimfs;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
 
 public class FileMetaDataTest {
 	private static final String PATH = "foo";
@@ -68,7 +69,8 @@ public class FileMetaDataTest {
 
 	@Test
 	public void testEqualsVerify() throws Exception {
-		EqualsVerifier.forClass(FileMetaData.class).allFieldsShouldBeUsedExcept("id").verify();
+		EqualsVerifier.forClass(FileMetaData.class).allFieldsShouldBeUsedExcept("id").suppress(Warning.NONFINAL_FIELDS)
+				.verify();
 	}
 
 	@Test

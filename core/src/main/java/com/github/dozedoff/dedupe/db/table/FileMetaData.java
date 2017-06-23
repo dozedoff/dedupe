@@ -12,7 +12,6 @@ import java.util.Objects;
 
 import com.github.dozedoff.dedupe.db.dao.FileMetaDataDao;
 import com.google.common.base.MoreObjects;
-import com.google.errorprone.annotations.Immutable;
 import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
@@ -24,7 +23,6 @@ import com.j256.ormlite.table.DatabaseTable;
  *
  */
 @DatabaseTable(daoClass = FileMetaDataDao.class)
-@Immutable
 final public class FileMetaData {
 	public static final String PATH_COLUMN_NAME = "path";
 
