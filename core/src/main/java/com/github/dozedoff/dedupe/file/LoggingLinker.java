@@ -37,8 +37,8 @@ public class LoggingLinker implements FileLinker {
 	 */
 	@Override
 	public void link(Path source, Collection<Path> targets) {
+		LOGGER.info("Would link to {}:", source);
 		for (Path target : targets) {
-			LOGGER.info("Would link to {}:", source);
 			LOGGER.info("    -> {}", target);
 		}
 	}
