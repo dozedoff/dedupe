@@ -102,6 +102,16 @@ final public class FileMetaData {
 	}
 
 	/**
+	 * Set the size of this file.
+	 * 
+	 * @param size
+	 *            to set
+	 */
+	public void setSize(long size) {
+		this.size = size;
+	}
+
+	/**
 	 * The timestamp when the file was last modified.
 	 * 
 	 * @return the files last modiefied timestamp
@@ -111,12 +121,32 @@ final public class FileMetaData {
 	}
 
 	/**
+	 * Set the last modified time of this file
+	 * 
+	 * @param modifiedTime
+	 *            the time to set
+	 */
+	public void setModifiedTime(long modifiedTime) {
+		this.modifiedTime = modifiedTime;
+	}
+
+	/**
 	 * The hash of the file based on it's contents.
 	 * 
 	 * @return a hash representing the file
 	 */
 	public byte[] getHash() {
 		return hash.clone();
+	}
+
+	/**
+	 * Set the hash for this file
+	 * 
+	 * @param hash
+	 *            to set
+	 */
+	public void setHash(byte[] hash) {
+		this.hash = hash.clone();
 	}
 
 	/**
