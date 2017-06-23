@@ -7,7 +7,6 @@ package com.github.dozedoff.dedupe.db.table;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Objects;
 
 import com.github.dozedoff.dedupe.db.dao.FileMetaDataDao;
@@ -125,28 +124,26 @@ final public class FileMetaData {
 	 * 
 	 * @param obj
 	 *            the object to compare to this instance
-	 * @return true if all fields except the id match
+	 * @return true if the path matches
 	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof FileMetaData) {
 			FileMetaData other = (FileMetaData) obj;
-			return Objects.equals(this.path, other.path) && Objects.equals(this.size, other.size)
-					&& Objects.equals(this.modifiedTime, other.modifiedTime)
-					&& Objects.deepEquals(this.hash, other.hash);
+			return Objects.equals(this.path, other.path);
 		}
 
 		return false;
 	}
 
 	/**
-	 * Hashcode of this instance of all fields except id.
+	 * Hashcode of this instance is the hash of path.
 	 * 
 	 * @return the hashcode of this instance
 	 */
 	@Override
 	public int hashCode() {
-		return Objects.hash(path, size, modifiedTime, Arrays.hashCode(hash));
+		return Objects.hash(path);
 	}
 
 	/**

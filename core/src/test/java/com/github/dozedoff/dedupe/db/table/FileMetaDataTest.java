@@ -69,7 +69,8 @@ public class FileMetaDataTest {
 
 	@Test
 	public void testEqualsVerify() throws Exception {
-		EqualsVerifier.forClass(FileMetaData.class).allFieldsShouldBeUsedExcept("id").suppress(Warning.NONFINAL_FIELDS)
+		EqualsVerifier.forClass(FileMetaData.class).allFieldsShouldBeUsedExcept("id", "size", "modifiedTime", "hash")
+				.suppress(Warning.NONFINAL_FIELDS)
 				.verify();
 	}
 
