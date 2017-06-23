@@ -5,7 +5,10 @@
 package com.github.dozedoff.dedupe.db;
 
 import java.sql.SQLException;
+import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -35,6 +38,7 @@ public class BatchWriter<D extends Dao<T, ?>, T> {
 
 	private final D dao;
 	private final ConcurrentLinkedQueue<T> toPersist;
+	private final ConcurrentHashMap<T, T> toReplace;
 	private final long flushIntervalDuration;
 	private final TimeUnit flushIntervalUnit;
 	private boolean isShuttingDown;
@@ -58,6 +62,7 @@ public class BatchWriter<D extends Dao<T, ?>, T> {
 		this.flushIntervalUnit = timeunit;
 
 		this.toPersist = new ConcurrentLinkedQueue<T>();
+		this.toReplace = new ConcurrentHashMap<T, T>();
 		isFlushing = new Semaphore(1);
 		this.intervalTimer = Stopwatch.createStarted();
 	}
@@ -81,13 +86,31 @@ public class BatchWriter<D extends Dao<T, ?>, T> {
 	 *            element to queue for write
 	 */
 	public void add(T enqueue) {
-		if (isShuttingDown) {
-			throw new IllegalStateException("Batchwriter is shutting down");
-		}
+		shutdownCheck();
 
 		toPersist.add(enqueue);
 
 		flushCheck();
+	}
+
+	private void shutdownCheck() {
+		if (isShuttingDown) {
+			throw new IllegalStateException("Batchwriter is shutting down");
+		}
+	}
+
+	/**
+	 * Replace an existing entry, performs a atomic delete / create.
+	 * 
+	 * @param oldEntry
+	 *            to replace
+	 * @param newEntry
+	 *            to use instead
+	 */
+	public void replace(T oldEntry, T newEntry) {
+		shutdownCheck();
+
+		toReplace.put(oldEntry, newEntry);
 	}
 
 	/**
@@ -104,25 +127,58 @@ public class BatchWriter<D extends Dao<T, ?>, T> {
 		this.intervalTimer.reset();
 
 		try {
-			TransactionManager.callInTransaction(dao.getConnectionSource(), new Callable<Void>() {
-				@Override
-				public Void call() {
-					while (!toPersist.isEmpty()) {
-						T toWrite = toPersist.poll();
-						try {
-							dao.create(toWrite);
-						} catch (SQLException e) {
-							LOGGER.warn("Failed to write {}: {}", toWrite, e.toString());
-						}
-					}
-					return null;
-				}
-			});
+			writeNewEntries();
+			writeReplacedEntries();
 		} catch (SQLException e) {
 			LOGGER.warn("Batch transaction call failed: {}", e.toString());
 		}
 
 		this.intervalTimer.start();
+	}
+
+	private void writeNewEntries() throws SQLException {
+		TransactionManager.callInTransaction(dao.getConnectionSource(), new Callable<Void>() {
+			@Override
+			public Void call() {
+				while (!toPersist.isEmpty()) {
+					T toWrite = toPersist.poll();
+					try {
+						dao.create(toWrite);
+					} catch (SQLException e) {
+						LOGGER.warn("Failed to write {}: {}", toWrite, e.toString());
+					}
+				}
+				return null;
+			}
+		});
+	}
+
+	private void writeReplacedEntries() throws SQLException {
+		TransactionManager.callInTransaction(dao.getConnectionSource(), new Callable<Void>() {
+			@Override
+			public Void call() {
+				Iterator<Entry<T, T>> iter = toReplace.entrySet().iterator();
+				while (iter.hasNext()) {
+					Entry<T, T> entry = iter.next();
+					T oldEntry = entry.getKey();
+					T newEntry = entry.getValue();
+
+					try {
+						replaceEntry(oldEntry, newEntry);
+						iter.remove();
+					} catch (SQLException e) {
+						LOGGER.warn("Failed to replace {} with {}: {}", oldEntry, newEntry, e.toString());
+					}
+				}
+
+				return null;
+			}
+		});
+	}
+
+	private void replaceEntry(T oldEntry, T newEntry) throws SQLException {
+		dao.delete(oldEntry);
+		dao.create(newEntry);
 	}
 
 	/**

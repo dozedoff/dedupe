@@ -7,6 +7,8 @@ package com.github.dozedoff.dedupe.db;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Awaitility.to;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.hasItem;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -32,12 +34,17 @@ public class BatchWriterTest {
 	private static final long TIMEOUT_FACTOR = 5;
 	private static final Duration TIMEOUT = new Duration(DURATION * TIMEOUT_FACTOR, UNIT);
 
+	private static final String PATH = "E";
+
 	private BatchWriter<Dao<FileMetaData, Integer>, FileMetaData> cut;
 	private Database database;
 
 	private Dao<FileMetaData, Integer> dao;
 	
 	private List<FileMetaData> testData;
+
+	private FileMetaData oldMeta;
+	private FileMetaData newMeta;
 
 	@Before
 	public void setUp() throws Exception {
@@ -50,6 +57,9 @@ public class BatchWriterTest {
 		testData.add(new FileMetaData("", 0, 0, new byte[0]));
 		testData.add(new FileMetaData("a", 0, 0, new byte[0]));
 		testData.add(new FileMetaData("b", 0, 0, new byte[0]));
+
+		oldMeta = new FileMetaData(PATH, 0, 0, new byte[0]);
+		newMeta = new FileMetaData(PATH, 1, 0, new byte[0]);
 	}
 
 	@After
@@ -103,5 +113,34 @@ public class BatchWriterTest {
 		cut.shutdown();
 
 		cut.add(testData.get(0));
+	}
+
+	@Test
+	public void testReplaceOldMetadataRemoved() throws Exception {
+		cut.add(oldMeta);
+		cut.flush();
+
+		cut.replace(oldMeta, newMeta);
+		cut.flush();
+
+		await().atMost(TIMEOUT).untilCall(to(dao).queryForAll(), not(hasItem(oldMeta)));
+	}
+
+	@Test
+	public void testReplaceNewMetadataAdded() throws Exception {
+		cut.add(oldMeta);
+		cut.flush();
+
+		cut.replace(oldMeta, newMeta);
+		cut.flush();
+
+		await().atMost(TIMEOUT).untilCall(to(dao).queryForAll(), hasItem(newMeta));
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void testReplaceDuringShutDown() throws Exception {
+		cut.shutdown();
+
+		cut.replace(oldMeta, newMeta);
 	}
 }
