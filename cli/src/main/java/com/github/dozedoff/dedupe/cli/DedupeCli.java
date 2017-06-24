@@ -172,8 +172,8 @@ public class DedupeCli {
 						if (verify.hasChanged(meta)) {
 							LOGGER.info("File {} has changed, updating metadata", meta.getPath());
 							updatedMeta.getAndIncrement();
-
-							batchWriter.replace(meta, metaData.createMetaDataFromFile(t));
+							metaData.updateMetaData(meta);
+							batchWriter.add(meta);
 						}
 					} else {
 						newMeta.getAndIncrement();

@@ -5,6 +5,8 @@
 package com.github.dozedoff.dedupe.file;
 
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -22,6 +24,25 @@ import com.google.common.io.MoreFiles;
  */
 public class MetaData {
 	private static final HashFunction SHA512 = Hashing.sha512();
+
+	private final FileSystem fileSystem;
+
+	/**
+	 * Create a new instance using the default {@link FileSystem} from {@link FileSystems#getDefault()}.
+	 */
+	public MetaData() {
+		this.fileSystem = FileSystems.getDefault();
+	}
+
+	/**
+	 * Create a new instance using the provided {@link FileSystem}.
+	 * 
+	 * @param fileSystem
+	 *            to use for resolving paths
+	 */
+	public MetaData(FileSystem fileSystem) {
+		this.fileSystem = fileSystem;
+	}
 
 	/**
 	 * Get the file size.
@@ -74,5 +95,21 @@ public class MetaData {
 	 */
 	public FileMetaData createMetaDataFromFile(Path file) throws IOException {
 		return new FileMetaData(file.toString(), size(file), lastModified(file), contentHash(file));
+	}
+
+	/**
+	 * Update size, modified time and hash for the {@link FileMetaData} object.
+	 * 
+	 * @param meta
+	 *            to update
+	 * @throws IOException
+	 *             if there is an IO error
+	 */
+	public void updateMetaData(FileMetaData meta) throws IOException {
+		Path path = fileSystem.getPath(meta.getPathAsString());
+
+		meta.setSize(size(path));
+		meta.setModifiedTime(lastModified(path));
+		meta.setHash(contentHash(path));
 	}
 }
