@@ -79,8 +79,9 @@ public class BatchWriter<D extends Dao<T, ?>, T> {
 	}
 
 	/**
-	 * Add a row to the queue to be written at a later time. If the interval has been exceeded, a
-	 * {@link BatchWriter#flush()} will be triggered after the insert.
+	 * Add a row to the queue to be written at a later time. If the row exists, it will be updated, otherwise a new row
+	 * will be created. If the interval has been exceeded, a {@link BatchWriter#flush()} will be triggered after the
+	 * insert.
 	 * 
 	 * @param enqueue
 	 *            element to queue for write
@@ -143,7 +144,7 @@ public class BatchWriter<D extends Dao<T, ?>, T> {
 				while (!toPersist.isEmpty()) {
 					T toWrite = toPersist.poll();
 					try {
-						dao.create(toWrite);
+						dao.createOrUpdate(toWrite);
 					} catch (SQLException e) {
 						LOGGER.warn("Failed to write {}: {}", toWrite, e.toString());
 					}

@@ -9,6 +9,7 @@ import static org.awaitility.Awaitility.to;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.hasItem;
+import static org.junit.Assert.assertThat;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -115,6 +117,7 @@ public class BatchWriterTest {
 		cut.add(testData.get(0));
 	}
 
+	@Ignore
 	@Test
 	public void testReplaceOldMetadataRemoved() throws Exception {
 		cut.add(oldMeta);
@@ -124,6 +127,16 @@ public class BatchWriterTest {
 		cut.flush();
 
 		await().atMost(TIMEOUT).untilCall(to(dao).queryForAll(), not(hasItem(oldMeta)));
+	}
+
+	@Test
+	public void testAddUpdatesExistingRow() throws Exception {
+		oldMeta.setSize(1);
+
+		cut.add(oldMeta);
+		cut.flush();
+
+		assertThat(dao.queryForId(1).getSize(), is(Long.valueOf(1)));
 	}
 
 	@Test
