@@ -7,8 +7,6 @@ package com.github.dozedoff.dedupe.db;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Awaitility.to;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertThat;
 
 import java.util.LinkedList;
@@ -19,7 +17,6 @@ import java.util.concurrent.TimeUnit;
 import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -46,7 +43,6 @@ public class BatchWriterTest {
 	private List<FileMetaData> testData;
 
 	private FileMetaData oldMeta;
-	private FileMetaData newMeta;
 
 	@Before
 	public void setUp() throws Exception {
@@ -61,7 +57,6 @@ public class BatchWriterTest {
 		testData.add(new FileMetaData("b", 0, 0, new byte[0]));
 
 		oldMeta = new FileMetaData(PATH, 0, 0, new byte[0]);
-		newMeta = new FileMetaData(PATH, 1, 0, new byte[0]);
 	}
 
 	@After
@@ -117,17 +112,7 @@ public class BatchWriterTest {
 		cut.add(testData.get(0));
 	}
 
-	@Ignore
-	@Test
-	public void testReplaceOldMetadataRemoved() throws Exception {
-		cut.add(oldMeta);
-		cut.flush();
 
-		cut.replace(oldMeta, newMeta);
-		cut.flush();
-
-		await().atMost(TIMEOUT).untilCall(to(dao).queryForAll(), not(hasItem(oldMeta)));
-	}
 
 	@Test
 	public void testAddUpdatesExistingRow() throws Exception {
@@ -137,23 +122,5 @@ public class BatchWriterTest {
 		cut.flush();
 
 		assertThat(dao.queryForId(1).getSize(), is(Long.valueOf(1)));
-	}
-
-	@Test
-	public void testReplaceNewMetadataAdded() throws Exception {
-		cut.add(oldMeta);
-		cut.flush();
-
-		cut.replace(oldMeta, newMeta);
-		cut.flush();
-
-		await().atMost(TIMEOUT).untilCall(to(dao).queryForAll(), hasItem(newMeta));
-	}
-
-	@Test(expected = IllegalStateException.class)
-	public void testReplaceDuringShutDown() throws Exception {
-		cut.shutdown();
-
-		cut.replace(oldMeta, newMeta);
 	}
 }
