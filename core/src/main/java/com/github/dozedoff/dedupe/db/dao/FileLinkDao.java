@@ -60,7 +60,8 @@ public class FileLinkDao extends BaseDaoImpl<FileLink, Integer> {
 	 *             if there is an error accessing the database
 	 */
 	public void linkFiles(FileMetaData source, FileMetaData link) throws SQLException {
-		TransactionManager.callInTransaction(connectionSource, new Callable<Void>() {
+		synchronized (deleteLink) {
+			TransactionManager.callInTransaction(connectionSource, new Callable<Void>() {
 			@Override
 			public Void call() throws Exception {
 				deleteLink.setValue(link);
@@ -70,6 +71,7 @@ public class FileLinkDao extends BaseDaoImpl<FileLink, Integer> {
 				return null;
 			}
 		});
+		}
 	}
 
 	/**
