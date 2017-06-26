@@ -78,4 +78,18 @@ public class FileMetaDataTest {
 	public void testToString() throws Exception {
 		assertThat(cut.toString(), is(TO_STRING));
 	}
+
+	@Test
+	public void testFileMetaDataStringPath() throws Exception {
+		cut = new FileMetaData(PATH);
+
+		assertThat(cut.getPathAsString(), is(PATH));
+	}
+
+	@Test
+	public void testFileMetaDataStringHash() throws Exception {
+		cut = new FileMetaData(PATH);
+
+		assertThat(cut.getHash(), is(new byte[0]));
+	}
 }
