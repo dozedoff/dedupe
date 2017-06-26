@@ -26,8 +26,10 @@ public class FileLinkDaoTest {
 	private FileMetaData metaA;
 	private FileMetaData metaB;
 	private FileMetaData metaC;
+	private FileMetaData metaD;
 
 	private FileLink linkAC;
+	private FileLink linkAD;
 	private FileLink linkBC;
 
 	private Database database;
@@ -42,11 +44,15 @@ public class FileLinkDaoTest {
 		metaA = createMeta("A");
 		metaB = createMeta("B");
 		metaC = createMeta("C");
+		metaD = createMeta("D");
 
 		linkAC = new FileLink(metaA, metaC);
+		linkAD = new FileLink(metaA, metaD);
 		linkBC = new FileLink(metaB, metaC);
 
 		cut.create(linkAC);
+		cut.create(linkAD);
+
 		cut.clearObjectCache();
 	}
 
@@ -75,7 +81,7 @@ public class FileLinkDaoTest {
 	public void testHasLink() throws Exception {
 		List<FileLink> links = cut.queryForAll();
 
-		assertThat(links, containsInAnyOrder(linkAC));
+		assertThat(links, hasItem(linkAC));
 	}
 
 	@Test
@@ -84,7 +90,7 @@ public class FileLinkDaoTest {
 
 		List<FileLink> links = cut.queryForAll();
 
-		assertThat(links, containsInAnyOrder(linkBC));
+		assertThat(links, hasItem(linkBC));
 	}
 
 	@Test
@@ -94,5 +100,10 @@ public class FileLinkDaoTest {
 		List<FileLink> links = cut.queryForAll();
 
 		assertThat(links, hasItem(new FileLink(metaB, metaA)));
+	}
+
+	@Test
+	public void testGetLinksTo() throws Exception {
+		assertThat(cut.getLinksTo(metaA), containsInAnyOrder(metaC, metaD));
 	}
 }

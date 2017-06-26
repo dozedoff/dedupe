@@ -5,7 +5,9 @@
 package com.github.dozedoff.dedupe.db.dao;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import com.github.dozedoff.dedupe.db.table.FileLink;
 import com.github.dozedoff.dedupe.db.table.FileMetaData;
@@ -13,12 +15,16 @@ import com.j256.ormlite.dao.BaseDaoImpl;
 import com.j256.ormlite.misc.TransactionManager;
 import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.stmt.PreparedDelete;
+import com.j256.ormlite.stmt.PreparedQuery;
 import com.j256.ormlite.stmt.SelectArg;
 import com.j256.ormlite.support.ConnectionSource;
 
 public class FileLinkDao extends BaseDaoImpl<FileLink, Integer> {
 	private final PreparedDelete<FileLink> linkDelete;
+	private final PreparedQuery<FileLink> linkQuery;
+
 	private final SelectArg deleteLink;
+	private final SelectArg querySource;
 
 	/**
 	 * Create an extended dao for {@link FileLink}.
@@ -34,9 +40,13 @@ public class FileLinkDao extends BaseDaoImpl<FileLink, Integer> {
 		super(connectionSource, dataClass);
 
 		this.deleteLink = new SelectArg();
+		this.querySource = new SelectArg();
+
 		DeleteBuilder<FileLink, Integer> db = deleteBuilder();
 		db.where().eq("link_id", deleteLink);
 		this.linkDelete = db.prepare();
+
+		this.linkQuery = queryBuilder().where().eq("source_id", querySource).prepare();
 	}
 
 	/**
@@ -60,5 +70,25 @@ public class FileLinkDao extends BaseDaoImpl<FileLink, Integer> {
 				return null;
 			}
 		});
+	}
+
+	/**
+	 * Get all known files that point to the given source.
+	 * 
+	 * @param source
+	 *            to find links for
+	 * @return a list of files pointing to this source
+	 * @throws SQLException
+	 *             if there is an error accessing the database
+	 */
+	public List<FileMetaData> getLinksTo(FileMetaData source) throws SQLException {
+		List<FileLink> links;
+
+		synchronized (querySource) {
+			querySource.setValue(source);
+			links = query(linkQuery);
+		}
+
+		return links.parallelStream().map(link -> link.getLink()).collect(Collectors.toList());
 	}
 }
