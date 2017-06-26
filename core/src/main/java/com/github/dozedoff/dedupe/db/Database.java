@@ -6,6 +6,7 @@ package com.github.dozedoff.dedupe.db;
 
 import java.sql.SQLException;
 
+import com.github.dozedoff.dedupe.db.table.FileLink;
 import com.github.dozedoff.dedupe.db.table.FileMetaData;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.DatabaseConnection;
@@ -63,6 +64,7 @@ public class Database {
 		connectionSource.releaseConnection(dbConn);
 
 		TableUtils.createTableIfNotExists(getConnectionSource(), FileMetaData.class);
+		TableUtils.createTableIfNotExists(getConnectionSource(), FileLink.class);
 	}
 
 	/**
