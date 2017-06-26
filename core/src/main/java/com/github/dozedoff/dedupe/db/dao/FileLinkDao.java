@@ -20,10 +20,16 @@ import com.j256.ormlite.stmt.SelectArg;
 import com.j256.ormlite.support.ConnectionSource;
 
 public class FileLinkDao extends BaseDaoImpl<FileLink, Integer> {
+	private static final String LINK_ID_COLUMN = "link_id";
+	private static final String SOURCE_ID_COLUMN = "source_id";
+
 	private final PreparedDelete<FileLink> linkDelete;
+	private final PreparedDelete<FileLink> allMetaDelete;
 	private final PreparedQuery<FileLink> linkQuery;
 
 	private final SelectArg deleteLink;
+	private final SelectArg deleteAllLink;
+	private final SelectArg deleteAllSource;
 	private final SelectArg querySource;
 
 	/**
@@ -41,12 +47,18 @@ public class FileLinkDao extends BaseDaoImpl<FileLink, Integer> {
 
 		this.deleteLink = new SelectArg();
 		this.querySource = new SelectArg();
+		this.deleteAllLink = new SelectArg();
+		this.deleteAllSource = new SelectArg();
 
 		DeleteBuilder<FileLink, Integer> db = deleteBuilder();
-		db.where().eq("link_id", deleteLink);
+		db.where().eq(LINK_ID_COLUMN, deleteLink);
 		this.linkDelete = db.prepare();
 
-		this.linkQuery = queryBuilder().where().eq("source_id", querySource).prepare();
+		DeleteBuilder<FileLink, Integer> metaDeleteBuilder = deleteBuilder();
+		metaDeleteBuilder.where().eq(LINK_ID_COLUMN, deleteAllLink).or().eq(SOURCE_ID_COLUMN, deleteAllSource);
+		this.allMetaDelete = metaDeleteBuilder.prepare();
+
+		this.linkQuery = queryBuilder().where().eq(SOURCE_ID_COLUMN, querySource).prepare();
 	}
 
 	/**
@@ -92,5 +104,22 @@ public class FileLinkDao extends BaseDaoImpl<FileLink, Integer> {
 		}
 
 		return links.parallelStream().map(link -> link.getLink()).collect(Collectors.toList());
+	}
+
+	/**
+	 * Delete all links that reference the given {@link FileMetaData}.
+	 * 
+	 * @param metadata
+	 *            for which all links should be deleted
+	 * @throws SQLException
+	 *             if there is an error accessing the database
+	 */
+	public void deleteLinksWith(FileMetaData metadata) throws SQLException {
+		synchronized (deleteAllLink) {
+			deleteAllLink.setValue(metadata);
+			deleteAllSource.setValue(metadata);
+
+			delete(allMetaDelete);
+		}
 	}
 }

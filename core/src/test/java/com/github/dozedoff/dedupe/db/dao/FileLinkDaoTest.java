@@ -4,7 +4,9 @@
  */
 package com.github.dozedoff.dedupe.db.dao;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertThat;
 
@@ -106,4 +108,19 @@ public class FileLinkDaoTest {
 	public void testGetLinksTo() throws Exception {
 		assertThat(cut.getLinksTo(metaA), containsInAnyOrder(metaC, metaD));
 	}
+
+	@Test
+	public void testDeleteLinksWithMetaInLink() throws Exception {
+		cut.deleteLinksWith(metaC);
+
+		assertThat(cut.queryForAll(), containsInAnyOrder(linkAD));
+	}
+
+	@Test
+	public void testDeleteLinksWithMetaInSource() throws Exception {
+		cut.deleteLinksWith(metaA);
+
+		assertThat(cut.queryForAll(), is(empty()));
+	}
+
 }
