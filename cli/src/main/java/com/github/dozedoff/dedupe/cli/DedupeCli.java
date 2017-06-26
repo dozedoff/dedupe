@@ -8,8 +8,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -238,7 +240,16 @@ public class DedupeCli {
 				continue;
 			}
 
-			Iterator<FileMetaData> iter = duplicateGroup.iterator();
+			List<FileMetaData> duplicateList = new ArrayList<FileMetaData>(duplicateGroup);
+			Collections.sort(duplicateList, new Comparator<FileMetaData>() {
+
+				@Override
+				public int compare(FileMetaData o1, FileMetaData o2) {
+					return o1.getPath().compareTo(o2.getPath());
+				}
+			});
+
+			Iterator<FileMetaData> iter = duplicateList.iterator();
 
 			Path source = iter.next().getPath();
 			iter.remove();
