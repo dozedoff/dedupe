@@ -22,8 +22,9 @@ public interface FileLinker {
 	 *            to link to
 	 * @param targets
 	 *            to replace with links
+	 * @return true if all files could be linked
 	 */
-	void link(Path source, Path... targets);
+	boolean link(Path source, Path... targets);
 
 	/**
 	 * Create links from the targets to the source file. If the targets exist, they will be replaced with links.
@@ -32,6 +33,7 @@ public interface FileLinker {
 	 *            to link to
 	 * @param targets
 	 *            to replace with links
+	 * @return true if all files could be linked
 	 */
-	void link(Path source, Collection<Path> targets);
+	boolean link(Path source, Collection<Path> targets);
 }

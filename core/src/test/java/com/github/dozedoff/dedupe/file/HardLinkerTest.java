@@ -76,4 +76,16 @@ public class HardLinkerTest {
 
 		assertThat(CompareFile.equal(fileA, fileB), is(false));
 	}
+
+	@Test
+	public void testAllOk() throws Exception {
+		assertThat(cut.link(fileA, fileB), is(true));
+	}
+
+	@Test
+	public void testAllNotOk() throws Exception {
+		cut.link(fileA, fileC);
+
+		assertThat(cut.link(fileA, fileC), is(false));
+	}
 }

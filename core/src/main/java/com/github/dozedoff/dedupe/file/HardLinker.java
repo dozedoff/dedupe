@@ -28,8 +28,8 @@ public class HardLinker implements FileLinker {
 	 * @param {@inheritDoc}
 	 */
 	@Override
-	public void link(Path source, Path... targets) {
-		link(source, Arrays.asList(targets));
+	public boolean link(Path source, Path... targets) {
+		return link(source, Arrays.asList(targets));
 	}
 
 	/**
@@ -38,11 +38,14 @@ public class HardLinker implements FileLinker {
 	 * @param {@inheritDoc}
 	 */
 	@Override
-	public void link(Path source, Collection<Path> targets) {
+	public boolean link(Path source, Collection<Path> targets) {
+		boolean allOk = true;
+
 		for (Path target : targets) {
 			try {
 				if (!Files.getFileStore(source).equals(Files.getFileStore(target))) {
 					LOGGER.warn("{} and {} are not on the same filesystem, skipping...", source, target);
+					allOk = false;
 					continue;
 				}
 
@@ -50,6 +53,7 @@ public class HardLinker implements FileLinker {
 
 				if (filename == null) {
 					LOGGER.warn("Filename for {} was null, aborting...", target);
+					allOk = false;
 					continue;
 				}
 
@@ -59,7 +63,10 @@ public class HardLinker implements FileLinker {
 				Files.deleteIfExists(backup);
 			} catch (IOException e) {
 				LOGGER.warn("Failed to create hard link from {} to {}: {}", source, target, e.toString());
+				allOk = false;
 			}
 		}
+
+		return allOk;
 	}
 }
