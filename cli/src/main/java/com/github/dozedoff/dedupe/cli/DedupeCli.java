@@ -8,8 +8,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,7 +25,9 @@ import org.slf4j.LoggerFactory;
 
 import com.github.dozedoff.dedupe.db.BatchWriter;
 import com.github.dozedoff.dedupe.db.Database;
+import com.github.dozedoff.dedupe.db.dao.FileLinkDao;
 import com.github.dozedoff.dedupe.db.dao.FileMetaDataDao;
+import com.github.dozedoff.dedupe.db.table.FileLink;
 import com.github.dozedoff.dedupe.db.table.FileMetaData;
 import com.github.dozedoff.dedupe.duplicate.CompareFile;
 import com.github.dozedoff.dedupe.duplicate.HashGroup;
@@ -32,6 +36,7 @@ import com.github.dozedoff.dedupe.duplicate.VerifyMetaData;
 import com.github.dozedoff.dedupe.file.FileFinder;
 import com.github.dozedoff.dedupe.file.FileLinker;
 import com.github.dozedoff.dedupe.file.HardLinker;
+import com.github.dozedoff.dedupe.file.LinkedFilter;
 import com.github.dozedoff.dedupe.file.LoggingLinker;
 import com.github.dozedoff.dedupe.file.MetaData;
 import com.google.common.base.Stopwatch;
@@ -56,6 +61,7 @@ public class DedupeCli {
 
 	private Namespace ns;
 	private FileMetaDataDao dao;
+	private FileLinkDao linkDao;
 	Database database;
 	
 	public static void main(String[] args) throws SQLException {
@@ -98,6 +104,9 @@ public class DedupeCli {
 
 		dao = DaoManager.createDao(database.getConnectionSource(), FileMetaData.class);
 		dao.setObjectCache(new LruObjectCache(100));
+
+		linkDao = DaoManager.createDao(database.getConnectionSource(), FileLink.class);
+		linkDao.setObjectCache(new LruObjectCache(100));
 
 		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 			@Override
@@ -174,6 +183,7 @@ public class DedupeCli {
 							updatedMeta.getAndIncrement();
 							metaData.updateMetaData(meta);
 							batchWriter.add(meta);
+							linkDao.deleteLinksWith(meta);
 						}
 					} else {
 						newMeta.getAndIncrement();
@@ -200,7 +210,7 @@ public class DedupeCli {
 				totalFiles.get() - newMeta.get() - existingMeta.get());
 		LOGGER.info("Finished generating metadata for {} files in {}", newMeta, metadataSW);
 
-		batchWriter.shutdown();
+		batchWriter.flush();
 
 		Multimap<String, FileMetaData> hashBasedCandidates = hashGroup.nonUniqueMap();
 
@@ -231,23 +241,62 @@ public class DedupeCli {
 		}
 
 		long skipped = 0;
+		long linked = 0;
+
+		LinkedFilter linkedFilter = new LinkedFilter(linkDao);
+
+		Stopwatch linkTime = Stopwatch.createStarted();
 
 		for (Collection<FileMetaData> duplicateGroup : duplicateGroups) {
-			if (duplicateGroup.size() < 2) {
+			if (isValidDuplicateGroup(duplicateGroup)) {
 				skipped++;
 				continue;
 			}
 
-			Iterator<FileMetaData> iter = duplicateGroup.iterator();
+			List<FileMetaData> duplicateList = new ArrayList<FileMetaData>(duplicateGroup);
+			Collections.sort(duplicateList, new Comparator<FileMetaData>() {
 
-			Path source = iter.next().getPath();
+				@Override
+				public int compare(FileMetaData o1, FileMetaData o2) {
+					return o1.getPath().compareTo(o2.getPath());
+				}
+			});
+
+			Iterator<FileMetaData> iter = duplicateList.iterator();
+
+			FileMetaData source = iter.next();
 			iter.remove();
+			
+			duplicateGroup = linkedFilter.filterLinked(source, duplicateList);
 
-			fileLinker.link(source,
-					duplicateGroup.parallelStream().map(DedupeCli::pathFromMeta).sorted().collect(Collectors.toList()));
+			if (duplicateGroup.isEmpty()) {
+				skipped++;
+				continue;
+			}
+
+			linked++;
+
+			boolean allOk = fileLinker.link(source.getPath(),
+					duplicateGroup.parallelStream().map(DedupeCli::pathFromMeta).collect(Collectors.toList()));
+
+			if (allOk && !ns.getBoolean("dry_run")) {
+				duplicateGroup.parallelStream().forEach(meta -> {
+					try {
+						linkDao.linkFiles(source, meta);
+						batchWriter.add(meta);
+					} catch (SQLException e) {
+						LOGGER.warn("Failed to link {} to {} due to: {}", meta, source, e.toString());
+					}
+				});
+			}
 		}
 
-		LOGGER.info("Skipped {} groups because they contained less than two files", skipped);
+		batchWriter.shutdown();
+		LOGGER.info("In {}, linked {} groups and skipped {} groups", linkTime, linked, skipped);
+	}
+
+	private boolean isValidDuplicateGroup(Collection<FileMetaData> duplicateGroup) {
+		return duplicateGroup.size() < 2;
 	}
 
 	private static Path pathFromMeta(FileMetaData meta) {

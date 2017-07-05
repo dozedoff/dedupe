@@ -26,8 +26,8 @@ public class LoggingLinker implements FileLinker {
 	 * @param {@inheritDoc}
 	 */
 	@Override
-	public void link(Path source, Path... targets) {
-		link(source, Arrays.asList(targets));
+	public boolean link(Path source, Path... targets) {
+		return link(source, Arrays.asList(targets));
 	}
 
 	/**
@@ -36,10 +36,12 @@ public class LoggingLinker implements FileLinker {
 	 * @param {@inheritDoc}
 	 */
 	@Override
-	public void link(Path source, Collection<Path> targets) {
+	public boolean link(Path source, Collection<Path> targets) {
 		LOGGER.info("Would link to {}:", source);
 		for (Path target : targets) {
 			LOGGER.info("    -> {}", target);
 		}
+
+		return true;
 	}
 }

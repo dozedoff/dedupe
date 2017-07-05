@@ -45,6 +45,16 @@ final public class FileMetaData {
 	}
 
 	/**
+	 * Create a {@link FileMetaData} with the given path and default values. The hash is set to a zero length array.
+	 * 
+	 * @param path
+	 *            to set for the meta data
+	 */
+	public FileMetaData(String path) {
+		this(path, 0, 0, new byte[0]);
+	}
+
+	/**
 	 * Create a new file metadata entry
 	 * 
 	 * @param path
