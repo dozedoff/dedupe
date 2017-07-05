@@ -15,8 +15,6 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,6 +37,7 @@ import com.github.dozedoff.dedupe.file.HardLinker;
 import com.github.dozedoff.dedupe.file.LinkedFilter;
 import com.github.dozedoff.dedupe.file.LoggingLinker;
 import com.github.dozedoff.dedupe.file.MetaData;
+import com.github.dozedoff.dedupe.file.MetaDataUpdaterFunction;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -157,58 +156,21 @@ public class DedupeCli {
 		Stopwatch metadataSW = Stopwatch.createStarted();
 		HashGroup hashGroup = new HashGroup();
 
-		AtomicInteger existingMeta = new AtomicInteger();
-		AtomicInteger newMeta = new AtomicInteger();
-		AtomicInteger totalFiles = new AtomicInteger();
-		AtomicInteger updatedMeta = new AtomicInteger();
-
 		BatchWriter<FileMetaDataDao, FileMetaData> batchWriter = new BatchWriter<FileMetaDataDao, FileMetaData>(dao);
 
 		VerifyMetaData verify = new VerifyMetaData(metaData);
+		MetaDataUpdaterFunction metaUpdate = new MetaDataUpdaterFunction(dao, linkDao, verify, metaData,
+				batchWriter);
 
-		hashGroup.add(sizeBasedCandidates.parallelStream().map(new Function<Path, FileMetaData>() {
-			@Override
-			public FileMetaData apply(Path t) {
-				FileMetaData meta = null;
-
-				totalFiles.getAndIncrement();
-
-				try {
-					if (dao.hasMetaData(t)) {
-						existingMeta.getAndIncrement();
-						meta = dao.getMetaDataForPath(t);
-
-						if (verify.hasChanged(meta)) {
-							LOGGER.info("File {} has changed, updating metadata", meta.getPath());
-							updatedMeta.getAndIncrement();
-							metaData.updateMetaData(meta);
-							batchWriter.add(meta);
-							linkDao.deleteLinksWith(meta);
-						}
-					} else {
-						newMeta.getAndIncrement();
-						meta = metaData.createMetaDataFromFile(t);
-						
-						batchWriter.add(meta);
-					}
-
-					return meta;
-				} catch (IOException e) {
-					LOGGER.warn("Failed to generate metadata for {}: {}", t, e.toString());
-				} catch (SQLException e) {
-					LOGGER.warn("Failed to access database: {} cause: {}", e.toString(),
-							e.getCause() == null ? "null" : e.getCause().toString());
-				}
-
-				return new FileMetaData();
-			}
-		}));
+		hashGroup.add(sizeBasedCandidates.parallelStream().map(metaUpdate));
 
 		LOGGER.info(
 				"From a total of {} files, {} files were already known, of which {} were updated, {} new metadata entries were added and {} errors were encountered",
-				totalFiles, existingMeta, updatedMeta, newMeta, 
-				totalFiles.get() - newMeta.get() - existingMeta.get());
-		LOGGER.info("Finished generating metadata for {} files in {}", newMeta, metadataSW);
+				metaUpdate.total(), metaUpdate.existing(), metaUpdate.updated(), metaUpdate.created(),
+				metaUpdate.errors());
+
+		LOGGER.info("Finished generating metadata for {} files in {}", metaUpdate.created() + metaUpdate.updated(),
+				metadataSW);
 
 		batchWriter.flush();
 
